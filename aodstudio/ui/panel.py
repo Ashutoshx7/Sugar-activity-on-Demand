@@ -3615,6 +3615,9 @@ class CreateAIActivityPanel(Gtk.EventBox):
                 padding: 3px 14px;
                 min-height: 0;
             }
+            button.create-ai-home-modify label {
+                color: #333333;
+            }
             button.create-ai-home-modify:hover {
                 background-color: %(studio_lavender_soft)s;
                 border-color: %(studio_lavender_border)s;
