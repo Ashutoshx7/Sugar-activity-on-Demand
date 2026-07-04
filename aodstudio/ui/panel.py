@@ -234,6 +234,10 @@ class CreateAIActivityPanel(Gtk.EventBox):
             'Example: "Create a fractions playground where teams build '
             'and explain models."')
         self._is_fullscreen = False
+        self._home_flowbox = None
+        self._home_empty_box = None
+        self._home_status_label = None
+        self._home_scroll = None
 
         box = Gtk.VBox(spacing=style.zoom(8))
         box.set_border_width(style.zoom(10))
@@ -251,6 +255,10 @@ class CreateAIActivityPanel(Gtk.EventBox):
         self._content_alignment.add(self._stack)
         self._stack.show()
 
+        home_view = self._create_home_view()
+        self._stack.add_named(home_view, 'home')
+        home_view.show()
+
         choose_view = self._create_choose_view()
         self._stack.add_named(choose_view, 'choose')
         choose_view.show()
@@ -263,7 +271,7 @@ class CreateAIActivityPanel(Gtk.EventBox):
         self._stack.add_named(studio_view, 'studio')
         studio_view.show()
 
-        self._stack.set_visible_child_name('choose')
+        self._go_home()
 
     def reset_view(self):
         self.cancel_generation()
@@ -274,8 +282,7 @@ class CreateAIActivityPanel(Gtk.EventBox):
         self._aod_active_revision_id = ''
         self._aod_original_prompt = ''
         self._show_empty_activity_preview()
-        self._use_centered_layout()
-        self._stack.set_visible_child_name('choose')
+        self._go_home()
         self._reset_prompt()
 
     def cancel_generation(self):
@@ -297,9 +304,197 @@ class CreateAIActivityPanel(Gtk.EventBox):
         if cancel:
             service.cancel_job(job_id)
 
+    def _create_home_view(self):
+        content = Gtk.VBox(spacing=style.zoom(14))
+        content.set_size_request(style.zoom(1280), -1)
+
+        header = Gtk.HBox(spacing=style.zoom(12))
+        content.pack_start(header, False, False, 0)
+        header.show()
+
+        titles = Gtk.VBox(spacing=style.zoom(2))
+        header.pack_start(titles, False, False, 0)
+        titles.show()
+
+        title = Gtk.Label()
+        title.set_markup('<span size="xx-large" weight="bold">%s</span>' %
+                         _('Your activities'))
+        title.get_style_context().add_class('create-ai-title')
+        title.set_halign(Gtk.Align.START)
+        titles.pack_start(title, False, False, 0)
+        title.show()
+
+        subtitle = Gtk.Label(
+            _('Everything you have generated. Click one to open it, or '
+              'press Modify to keep working on it.'))
+        subtitle.get_style_context().add_class('create-ai-subtitle')
+        subtitle.set_halign(Gtk.Align.START)
+        subtitle.set_line_wrap(True)
+        titles.pack_start(subtitle, False, False, 0)
+        subtitle.show()
+
+        header.pack_end(self._create_primary_button(
+            _('Create new'), self.__home_create_new_cb), False, False, 0)
+
+        status = Gtk.Label('')
+        self._home_status_label = status
+        status.get_style_context().add_class('create-ai-meta-note')
+        status.set_halign(Gtk.Align.START)
+        content.pack_start(status, False, False, 0)
+        status.show()
+
+        scroll = Gtk.ScrolledWindow()
+        self._home_scroll = scroll
+        scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        content.pack_start(scroll, True, True, 0)
+
+        flowbox = Gtk.FlowBox()
+        self._home_flowbox = flowbox
+        flowbox.set_selection_mode(Gtk.SelectionMode.NONE)
+        flowbox.set_valign(Gtk.Align.START)
+        flowbox.set_min_children_per_line(2)
+        flowbox.set_max_children_per_line(4)
+        flowbox.set_homogeneous(True)
+        flowbox.set_column_spacing(style.zoom(16))
+        flowbox.set_row_spacing(style.zoom(16))
+        flowbox.set_margin_top(style.zoom(6))
+        scroll.add(flowbox)
+        flowbox.show()
+        scroll.show()
+
+        empty = Gtk.VBox(spacing=style.zoom(12))
+        self._home_empty_box = empty
+        empty.get_style_context().add_class('create-ai-home-empty')
+        empty.set_valign(Gtk.Align.CENTER)
+        empty.set_margin_top(style.zoom(60))
+
+        empty_icon = Icon(icon_name='computer-xo',
+                          pixel_size=style.zoom(72))
+        empty_icon.set_halign(Gtk.Align.CENTER)
+        empty.pack_start(empty_icon, False, False, 0)
+        empty_icon.show()
+
+        empty_title = Gtk.Label()
+        empty_title.set_markup('<span size="x-large" weight="bold">%s</span>'
+                               % _('No activities yet'))
+        empty_title.set_justify(Gtk.Justification.CENTER)
+        empty.pack_start(empty_title, False, False, 0)
+        empty_title.show()
+
+        empty_note = Gtk.Label(
+            _('Describe an idea and the studio will turn it into a real '
+              'Sugar activity you can play and share.'))
+        empty_note.get_style_context().add_class('create-ai-subtitle')
+        empty_note.set_justify(Gtk.Justification.CENTER)
+        empty_note.set_line_wrap(True)
+        empty.pack_start(empty_note, False, False, 0)
+        empty_note.show()
+
+        empty_button = self._create_primary_button(
+            _('Create your first activity'), self.__home_create_new_cb)
+        empty_button.set_halign(Gtk.Align.CENTER)
+        empty.pack_start(empty_button, False, False, style.zoom(6))
+
+        content.pack_start(empty, True, True, 0)
+
+        content.connect('map', self.__home_mapped_cb)
+        return content
+
+    def _create_home_project_tile(self, project):
+        tile = Gtk.EventBox()
+        tile.get_style_context().add_class('create-ai-home-tile')
+        tile.set_visible_window(True)
+        tile.set_above_child(False)
+        tile.add_events(Gdk.EventMask.ENTER_NOTIFY_MASK |
+                        Gdk.EventMask.LEAVE_NOTIFY_MASK |
+                        Gdk.EventMask.BUTTON_RELEASE_MASK)
+        tile.connect('enter-notify-event', self.__home_tile_enter_cb)
+        tile.connect('leave-notify-event', self.__home_tile_leave_cb)
+        tile.connect('button-release-event',
+                     self.__home_tile_released_cb, project)
+        tile.set_size_request(style.zoom(280), style.zoom(190))
+
+        box = Gtk.VBox(spacing=style.zoom(6))
+        box.set_border_width(style.zoom(14))
+        tile.add(box)
+        box.show()
+
+        if project['icon_path']:
+            icon = Icon(pixel_size=style.zoom(64))
+            icon.props.file = project['icon_path']
+        else:
+            icon = Icon(icon_name='computer-xo',
+                        pixel_size=style.zoom(64))
+        icon.set_halign(Gtk.Align.CENTER)
+        box.pack_start(icon, False, False, 0)
+        icon.show()
+
+        name = Gtk.Label(project['name'])
+        name.get_style_context().add_class('create-ai-home-title')
+        name.set_ellipsize(Pango.EllipsizeMode.END)
+        name.set_max_width_chars(24)
+        name.set_justify(Gtk.Justification.CENTER)
+        box.pack_start(name, False, False, 0)
+        name.show()
+
+        caption = Gtk.Label('%s · %s' % (
+            project['template'] or _('activity'),
+            time.strftime('%b %d, %Y',
+                          time.localtime(project['mtime']))))
+        caption.get_style_context().add_class('create-ai-home-caption')
+        caption.set_ellipsize(Pango.EllipsizeMode.END)
+        box.pack_start(caption, False, False, 0)
+        caption.show()
+
+        modify = Gtk.Button(_('Modify'))
+        modify.get_style_context().add_class('create-ai-home-modify')
+        modify.set_halign(Gtk.Align.CENTER)
+        modify.connect('clicked', self.__home_modify_clicked_cb, project)
+        box.pack_end(modify, False, False, 0)
+        modify.show()
+
+        tile.show()
+        return tile
+
+    def _refresh_home_projects(self):
+        if self._home_flowbox is None:
+            return
+
+        from aodstudio.model.aodprojects import list_generated_projects
+
+        for child in self._home_flowbox.get_children():
+            self._home_flowbox.remove(child)
+
+        projects = list_generated_projects()
+        for project in projects:
+            self._home_flowbox.add(
+                self._create_home_project_tile(project))
+
+        if self._home_status_label is not None:
+            self._home_status_label.set_text('')
+        if projects:
+            self._home_scroll.show()
+            self._home_empty_box.hide()
+        else:
+            self._home_scroll.hide()
+            self._home_empty_box.show()
+
+    def _go_home(self):
+        self._use_studio_layout()
+        self._refresh_home_projects()
+        self._stack.set_visible_child_name('home')
+
     def _create_choose_view(self):
         content = Gtk.VBox(spacing=style.zoom(22))
         content.set_size_request(style.zoom(1080), -1)
+
+        back_row = Gtk.HBox(spacing=0)
+        back_row.set_halign(Gtk.Align.START)
+        content.pack_start(back_row, False, False, 0)
+        back_row.show()
+
+        back_row.pack_start(self._create_plain_button(
+            _('Back'), self.__back_to_home_cb), False, False, 0)
 
         title = Gtk.Label()
         title.set_markup('<span size="xx-large" weight="bold">%s</span>' %
@@ -3391,6 +3586,41 @@ class CreateAIActivityPanel(Gtk.EventBox):
             }
             .create-ai-stage-card-hover label {
                 color: %(toolbar)s;
+            }
+            .create-ai-home-tile {
+                background-color: %(studio_surface)s;
+                border: 1px solid %(studio_edge)s;
+                border-radius: 12px;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.10);
+            }
+            .create-ai-home-tile-hover {
+                background-color: %(studio_lavender_soft)s;
+                border: 1px solid %(studio_lavender_border)s;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.14);
+            }
+            .create-ai-home-title {
+                color: #222;
+                font-weight: 700;
+                font-size: 13px;
+            }
+            .create-ai-home-caption {
+                color: #8a8a8a;
+                font-size: 10px;
+            }
+            button.create-ai-home-modify {
+                border-radius: 10px;
+                border: 1px solid #e3e3e3;
+                background-image: none;
+                background-color: #fafafa;
+                padding: 3px 14px;
+                min-height: 0;
+            }
+            button.create-ai-home-modify:hover {
+                background-color: %(studio_lavender_soft)s;
+                border-color: %(studio_lavender_border)s;
+            }
+            .create-ai-home-empty {
+                padding: 30px;
             }
             .create-ai-stage-title {
                 color: %(toolbar)s;
@@ -8801,6 +9031,46 @@ if clipboard.wait_is_text_available():
         self._use_centered_layout()
         self._stack.set_visible_child_name('create')
         self.focus_prompt()
+
+    def __home_create_new_cb(self, button):
+        self._use_centered_layout()
+        self._stack.set_visible_child_name('choose')
+
+    def __back_to_home_cb(self, button):
+        self._go_home()
+
+    def __home_mapped_cb(self, widget):
+        self._refresh_home_projects()
+
+    def __home_tile_enter_cb(self, tile, event):
+        if event.mode == Gdk.CrossingMode.NORMAL:
+            tile.get_style_context().add_class('create-ai-home-tile-hover')
+        return False
+
+    def __home_tile_leave_cb(self, tile, event):
+        tile.get_style_context().remove_class('create-ai-home-tile-hover')
+        return False
+
+    def __home_tile_released_cb(self, tile, event, project):
+        if event.button != 1:
+            return False
+        alloc = tile.get_allocation()
+        if 0 < event.x < alloc.width and 0 < event.y < alloc.height:
+            self._launch_generated_project(project)
+        return False
+
+    def __home_modify_clicked_cb(self, button, project):
+        self._open_project_in_studio(project)
+
+    def _launch_generated_project(self, project):
+        if self._home_status_label is not None:
+            self._home_status_label.set_text(
+                _('Opening %s...') % project['name'])
+
+    def _open_project_in_studio(self, project):
+        if self._home_status_label is not None:
+            self._home_status_label.set_text(
+                _('Reopening %s...') % project['name'])
 
     def __close_button_clicked_cb(self, button):
         self.emit('close-requested')

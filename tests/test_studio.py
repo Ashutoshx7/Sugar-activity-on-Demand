@@ -63,7 +63,7 @@ panel.reset_view()
 while Gtk.events_pending():
     Gtk.main_iteration_do(False)
 
-assert panel._stack.get_visible_child_name() == 'choose', \\
+assert panel._stack.get_visible_child_name() == 'home', \\
     panel._stack.get_visible_child_name()
 
 panel.append_prompt_text('a fractions quiz for kids')
