@@ -76,16 +76,71 @@ print('OFFSCREEN-OK')
 '''
 
 
+_OFFSCREEN_HOME_SCRIPT = '''
+import json
+import os
+import tempfile
+
+sugar_home = tempfile.mkdtemp(prefix='aod-studio-home-test-')
+os.environ['SUGAR_HOME'] = sugar_home
+
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
+
+from aodstudio.ui.panel import CreateAIActivityPanel
+
+
+def pump():
+    while Gtk.events_pending():
+        Gtk.main_iteration_do(False)
+
+
+window = Gtk.OffscreenWindow()
+panel = CreateAIActivityPanel()
+window.add(panel)
+window.show_all()
+panel.reset_view()
+pump()
+
+assert panel._stack.get_visible_child_name() == 'home'
+assert panel._home_empty_box.get_visible()
+assert len(panel._home_flowbox.get_children()) == 0
+
+panel._CreateAIActivityPanel__home_create_new_cb(None)
+pump()
+assert panel._stack.get_visible_child_name() == 'choose'
+
+panel._CreateAIActivityPanel__back_to_home_cb(None)
+pump()
+assert panel._stack.get_visible_child_name() == 'home'
+
+project_dir = os.path.join(
+    sugar_home, 'default', 'aod', 'projects', 'Demo.activity')
+os.makedirs(os.path.join(project_dir, 'activity'))
+with open(os.path.join(project_dir, 'aod_plan.json'), 'w',
+          encoding='utf-8') as plan_file:
+    json.dump({'name': 'Demo Activity', 'template': 'grid'}, plan_file)
+with open(os.path.join(project_dir, 'activity', 'activity.svg'), 'w',
+          encoding='utf-8') as icon_file:
+    icon_file.write('<svg xmlns="http://www.w3.org/2000/svg"/>')
+
+panel._refresh_home_projects()
+pump()
+assert len(panel._home_flowbox.get_children()) == 1
+assert not panel._home_empty_box.get_visible()
+
+window.destroy()
+print('OFFSCREEN-HOME-OK')
+'''
+
+
 @unittest.skipUnless(
     os.environ.get('DISPLAY') or os.environ.get('WAYLAND_DISPLAY'),
     'needs a display server')
 class TestStudioOffscreen(unittest.TestCase):
 
-    def test_panel_starts_on_chooser_and_survives_lifecycle(self):
-        # Run the GTK part in a subprocess with a sanitized environment:
-        # snap/IDE shells leak LD_LIBRARY_PATH/GTK_PATH values that make
-        # GTK hang, and a subprocess also isolates GTK state from other
-        # tests in this process.
+    def _run_offscreen(self, script):
         clean_env = {
             key: value for key, value in os.environ.items()
             if key not in ('LD_LIBRARY_PATH', 'GTK_PATH', 'GIO_MODULE_DIR',
@@ -94,8 +149,8 @@ class TestStudioOffscreen(unittest.TestCase):
         }
         clean_env['GDK_BACKEND'] = 'x11'
         try:
-            completed = subprocess.run(
-                [sys.executable, '-c', _OFFSCREEN_SCRIPT],
+            return subprocess.run(
+                [sys.executable, '-c', script],
                 cwd=REPO_ROOT,
                 env=clean_env,
                 capture_output=True,
@@ -103,8 +158,22 @@ class TestStudioOffscreen(unittest.TestCase):
                 timeout=90,
             )
         except subprocess.TimeoutExpired as expired:
-            self.fail('offscreen smoke timed out:\n%s\n%s'
+            self.fail('offscreen script timed out:\n%s\n%s'
                       % (expired.stdout, expired.stderr))
+
+    def test_home_gallery_empty_state_and_refresh(self):
+        completed = self._run_offscreen(_OFFSCREEN_HOME_SCRIPT)
+        self.assertEqual(
+            0, completed.returncode,
+            'offscreen home test failed:\n%s%s'
+            % (completed.stdout, completed.stderr))
+        self.assertIn('OFFSCREEN-HOME-OK', completed.stdout)
+
+    def test_panel_starts_on_home_and_survives_lifecycle(self):
+        # Sanitized-env subprocess: snap/IDE shells leak
+        # LD_LIBRARY_PATH/GTK_PATH values that make GTK hang, and a
+        # subprocess isolates GTK state from other tests.
+        completed = self._run_offscreen(_OFFSCREEN_SCRIPT)
         self.assertEqual(
             0, completed.returncode,
             'offscreen smoke failed:\n%s%s'
