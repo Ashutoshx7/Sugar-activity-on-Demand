@@ -11,10 +11,13 @@ activities, LLM code generation, validation, XO packaging, Flatpak export).
 
 ## What it does
 
-- Opens on **Your activities** — a home gallery of everything you have
-  generated (from `~/.sugar/default/aod/projects/`). Click a tile to play
-  the activity in its own window, or press **Modify** to reopen it in the
-  studio with its full version history and refinement chat.
+- Opens on **Your activities** — Sugar's classic home view: your XO icon
+  in the center (in your own colors) with everything you have generated
+  (from `~/.sugar/default/aod/projects/`) ringed around it, using the
+  same ring/spiral geometry as the Sugar shell. Click an icon to play the
+  activity in its own window; hover or right-click for **Open** /
+  **Modify** (reopen in the studio with full version history and
+  refinement chat); click the center XO to create something new.
 - Describe an activity in your own words; the studio plans and generates a
   complete Sugar activity (`activity.py`, `setup.py`, `activity.info`, icon,
   license, README).
