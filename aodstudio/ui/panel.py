@@ -9063,6 +9063,25 @@ if clipboard.wait_is_text_available():
         self._open_project_in_studio(project)
 
     def _launch_generated_project(self, project):
+        try:
+            subprocess.Popen(['sugar-activity3'],
+                             cwd=project['project_path'])
+        except FileNotFoundError:
+            if self._home_status_label is not None:
+                self._home_status_label.set_text(
+                    _('sugar-activity3 is not installed; install the '
+                      'Sugar toolkit (sugar-toolkit-gtk3) to open '
+                      'activities.'))
+            return
+        except OSError as error:
+            logging.exception('Could not launch generated activity')
+            if self._home_status_label is not None:
+                self._home_status_label.set_text(
+                    _('Could not open %(name)s: %(error)s') % {
+                        'name': project['name'],
+                        'error': error,
+                    })
+            return
         if self._home_status_label is not None:
             self._home_status_label.set_text(
                 _('Opening %s...') % project['name'])
