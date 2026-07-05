@@ -4,12 +4,12 @@
 
 import unittest
 
-from aodstudio.llm.enhance import _clean
-from aodstudio.llm.enhance import build_enhance_system_prompt
-from aodstudio.llm.enhance import enhance_prompt
-from aodstudio.llm.enhance import needs_enhancement
-from aodstudio.core.spec import ActivitySpec
-from aodstudio.core.spec import MAX_PROMPT_LENGTH
+from llm.enhance import _clean
+from llm.enhance import build_enhance_system_prompt
+from llm.enhance import enhance_prompt
+from llm.enhance import needs_enhancement
+from core.spec import ActivitySpec
+from core.spec import MAX_PROMPT_LENGTH
 
 
 class _FakeEnhancer:

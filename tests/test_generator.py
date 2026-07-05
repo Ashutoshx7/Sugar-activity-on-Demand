@@ -7,11 +7,11 @@ import shutil
 import tempfile
 import unittest
 
-from aodstudio.generation.generator import create_prototype_activity
-from aodstudio.generation.generator import infer_template
-from aodstudio.core.spec import ActivitySpec
-from aodstudio.generation.validator import validate_bundle
-from aodstudio.generation.validator import validate_project
+from generation.generator import create_prototype_activity
+from generation.generator import infer_template
+from core.spec import ActivitySpec
+from generation.validator import validate_bundle
+from generation.validator import validate_project
 
 
 class TestAodGenerator(unittest.TestCase):
@@ -171,7 +171,7 @@ class TestAodGenerator(unittest.TestCase):
         )
 
     def test_reapply_license_rewrites_bundle_artifacts(self):
-        from aodstudio.generation.pipeline import reapply_generation_license
+        from generation.pipeline import reapply_generation_license
 
         spec = ActivitySpec(
             'License Switch',

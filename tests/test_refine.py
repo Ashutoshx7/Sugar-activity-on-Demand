@@ -4,10 +4,10 @@
 
 import unittest
 
-from aodstudio.generation.refine import apply_patches
-from aodstudio.generation.refine import build_refine_system_prompt
-from aodstudio.generation.refine import build_refine_user_prompt
-from aodstudio.generation.refine import parse_search_replace
+from generation.refine import apply_patches
+from generation.refine import build_refine_system_prompt
+from generation.refine import build_refine_user_prompt
+from generation.refine import parse_search_replace
 
 
 _SAMPLE_SOURCE = (

@@ -15,7 +15,7 @@ enhancement problem must never break generation.
 import logging
 import re
 
-from aodstudio.core.spec import MAX_PROMPT_LENGTH
+from core.spec import MAX_PROMPT_LENGTH
 
 _ENHANCE_TIMEOUT = 120
 

@@ -96,7 +96,7 @@ def run():
 
     from gi.repository import Gtk
 
-    from aodstudio.ui.window import AODStudioWindow
+    from ui.window import AODStudioWindow
 
     window = AODStudioWindow()
     window.connect('destroy', lambda w: Gtk.main_quit())

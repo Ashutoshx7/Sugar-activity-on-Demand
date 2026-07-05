@@ -6,9 +6,9 @@ import unittest
 import os
 import tempfile
 
-from aodstudio.generation.rag import build_corpus
-from aodstudio.generation.rag import RagDocument
-from aodstudio.generation.rag import search
+from generation.rag import build_corpus
+from generation.rag import RagDocument
+from generation.rag import search
 
 
 class TestAodRag(unittest.TestCase):

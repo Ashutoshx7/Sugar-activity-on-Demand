@@ -9,11 +9,11 @@ import tarfile
 import tempfile
 import unittest
 
-from aodstudio.packaging.flatpak import flatpak_app_id
-from aodstudio.packaging.flatpak import package_flatpak
-from aodstudio.packaging.flatpak import render_flatpak_manifest
-from aodstudio.generation.generator import create_prototype_activity
-from aodstudio.core.spec import ActivitySpec
+from exports.flatpak import flatpak_app_id
+from exports.flatpak import package_flatpak
+from exports.flatpak import render_flatpak_manifest
+from generation.generator import create_prototype_activity
+from core.spec import ActivitySpec
 
 
 class TestAodFlatpak(unittest.TestCase):

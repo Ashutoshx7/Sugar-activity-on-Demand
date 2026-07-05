@@ -5,9 +5,9 @@
 import unittest
 from unittest import mock
 
-from aodstudio.preview.runner import _add_toolbar_button
-from aodstudio.preview.runner import _set_adjustment_bounds
-from aodstudio.preview.runner import _try_exec_preview
+from preview.runner import _add_toolbar_button
+from preview.runner import _set_adjustment_bounds
+from preview.runner import _try_exec_preview
 
 
 class TestAodPreviewCompatibility(unittest.TestCase):
@@ -47,7 +47,7 @@ class TestAodPreviewCompatibility(unittest.TestCase):
         )
 
         with mock.patch(
-                'aodstudio.preview.runner.PreviewActivity',
+                'preview.runner.PreviewActivity',
                 FakePreviewActivity):
             result = _try_exec_preview(
                 source, 'activity.py', '.', 'Preview')

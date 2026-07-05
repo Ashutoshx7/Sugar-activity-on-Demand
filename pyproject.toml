@@ -1,21 +1,14 @@
-[build-system]
-requires = ["setuptools>=61"]
-build-backend = "setuptools.build_meta"
+# Project metadata. The studio runs from a checkout
+# (bin/sugar-aod-studio or python3 main.py); it is intentionally not
+# pip-installable because its packages live at the repository root.
+# PyGObject (gi), GTK 3, and the sugar3 toolkit are system
+# dependencies — see README.md.
 
 [project]
-name = "sugar-aod-studio"
+name = "sugar-activity-on-demand"
 version = "0.1.0"
 description = "Standalone studio for generating Sugar learning activities with AI (Activity on Demand)"
 readme = "README.md"
 license = { text = "GPL-3.0-or-later" }
 authors = [{ name = "Sugar Labs" }]
 requires-python = ">=3.8"
-# PyGObject (gi), GTK 3, and the sugar3 toolkit are system dependencies —
-# they are not installable from PyPI on most distributions.  See README.md.
-dependencies = []
-
-[project.scripts]
-sugar-aod-studio = "aodstudio.main:run"
-
-[tool.setuptools.packages.find]
-include = ["aodstudio*"]

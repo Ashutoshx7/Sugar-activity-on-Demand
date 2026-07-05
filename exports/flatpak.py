@@ -22,7 +22,7 @@ import shutil
 import subprocess
 import tarfile
 
-from aodstudio.generation.generator import _identifier
+from generation.generator import _identifier
 
 # Flatpak application ids are reverse-DNS: at least two dot-separated
 # elements, each starting with a letter or underscore and otherwise

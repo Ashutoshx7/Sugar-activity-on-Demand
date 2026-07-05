@@ -7,18 +7,18 @@ import os
 import unittest
 from unittest import mock
 
-from aodstudio.llm.providers import ClaudeProvider
-from aodstudio.llm.providers import FreeModelProvider
-from aodstudio.llm.providers import GeminiProvider
-from aodstudio.llm.providers import OpenAICompatibleProvider
-from aodstudio.llm.providers import OpenAIProvider
-from aodstudio.llm.providers import OllamaProvider
-from aodstudio.llm.providers import ProviderError
-from aodstudio.llm.providers import create_provider
-from aodstudio.llm.providers import get_configured_provider
-from aodstudio.llm.providers import get_default_provider_name
-from aodstudio.llm.providers import get_local_provider_name
-from aodstudio.llm.providers import get_provider_statuses
+from llm.providers import ClaudeProvider
+from llm.providers import FreeModelProvider
+from llm.providers import GeminiProvider
+from llm.providers import OpenAICompatibleProvider
+from llm.providers import OpenAIProvider
+from llm.providers import OllamaProvider
+from llm.providers import ProviderError
+from llm.providers import create_provider
+from llm.providers import get_configured_provider
+from llm.providers import get_default_provider_name
+from llm.providers import get_local_provider_name
+from llm.providers import get_provider_statuses
 
 
 class TestAodLLMProviders(unittest.TestCase):
@@ -27,7 +27,7 @@ class TestAodLLMProviders(unittest.TestCase):
         import io
         import urllib.error
 
-        from aodstudio.llm import providers as aodllm
+        from llm import providers as aodllm
 
         response = mock.Mock()
         rate_limited = urllib.error.HTTPError(
@@ -45,7 +45,7 @@ class TestAodLLMProviders(unittest.TestCase):
         sleeper.assert_called_once()
 
     def test_network_error_is_retried(self):
-        from aodstudio.llm import providers as aodllm
+        from llm import providers as aodllm
 
         response = mock.Mock()
         with mock.patch('urllib.request.urlopen',
@@ -61,7 +61,7 @@ class TestAodLLMProviders(unittest.TestCase):
         import io
         import urllib.error
 
-        from aodstudio.llm import providers as aodllm
+        from llm import providers as aodllm
 
         unauthorized = urllib.error.HTTPError(
             'https://api.example', 401, 'Unauthorized', {},

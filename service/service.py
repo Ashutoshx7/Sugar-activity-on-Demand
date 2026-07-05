@@ -7,36 +7,36 @@ import logging
 import os
 import threading
 
-from aodstudio.llm.credentials import AODCredentialStore
-from aodstudio.llm.credentials import CredentialStoreError
-from aodstudio.generation.generator import restore_generation_result
-from aodstudio.service.jobs import AODJob
-from aodstudio.service.jobs import AODJobStore
-from aodstudio.service.jobs import STATUS_FAILED
-from aodstudio.service.jobs import STATUS_FINISHED
-from aodstudio.service.jobs import STATUS_GENERATING
-from aodstudio.service.jobs import STATUS_GROUNDING
-from aodstudio.service.jobs import STATUS_PACKAGING
-from aodstudio.service.jobs import STATUS_PLANNING
-from aodstudio.service.jobs import STATUS_PROVIDER
-from aodstudio.service.jobs import STATUS_QUEUED
-from aodstudio.service.jobs import STATUS_VALIDATING
-from aodstudio.llm.providers import create_provider
-from aodstudio.llm.providers import get_default_provider_name
-from aodstudio.llm.providers import get_local_provider_name
-from aodstudio.llm.providers import get_provider_statuses
-from aodstudio.llm.providers import normalize_provider_name
-from aodstudio.generation.pipeline import generate_activity
-from aodstudio.service.queue import AODJobQueue
-from aodstudio.service.sessions import AODMessage
-from aodstudio.service.sessions import AODRevision
-from aodstudio.service.sessions import AODSessionStore
-from aodstudio.service.sessions import ROLE_ASSISTANT
-from aodstudio.service.sessions import ROLE_USER
-from aodstudio.service.sessions import TYPE_ERROR
-from aodstudio.service.sessions import TYPE_PROMPT
-from aodstudio.service.sessions import TYPE_RESULT
-from aodstudio.service.sessions import TYPE_STATUS
+from llm.credentials import AODCredentialStore
+from llm.credentials import CredentialStoreError
+from generation.generator import restore_generation_result
+from service.jobs import AODJob
+from service.jobs import AODJobStore
+from service.jobs import STATUS_FAILED
+from service.jobs import STATUS_FINISHED
+from service.jobs import STATUS_GENERATING
+from service.jobs import STATUS_GROUNDING
+from service.jobs import STATUS_PACKAGING
+from service.jobs import STATUS_PLANNING
+from service.jobs import STATUS_PROVIDER
+from service.jobs import STATUS_QUEUED
+from service.jobs import STATUS_VALIDATING
+from llm.providers import create_provider
+from llm.providers import get_default_provider_name
+from llm.providers import get_local_provider_name
+from llm.providers import get_provider_statuses
+from llm.providers import normalize_provider_name
+from generation.pipeline import generate_activity
+from service.queue import AODJobQueue
+from service.sessions import AODMessage
+from service.sessions import AODRevision
+from service.sessions import AODSessionStore
+from service.sessions import ROLE_ASSISTANT
+from service.sessions import ROLE_USER
+from service.sessions import TYPE_ERROR
+from service.sessions import TYPE_PROMPT
+from service.sessions import TYPE_RESULT
+from service.sessions import TYPE_STATUS
 
 
 class JobCancelled(Exception):
@@ -435,8 +435,8 @@ class AODService:
                 package_bundle=False,
             )
 
-        from aodstudio.generation.pipeline import refine_activity
-        from aodstudio.generation.pipeline import PipelineError
+        from generation.pipeline import refine_activity
+        from generation.pipeline import PipelineError
 
         session = self._session_store.load(job.session_id)
         if session is None:

@@ -4,7 +4,7 @@
 
 import json
 
-from aodstudio.generation.rag import get_api_reference
+from generation.rag import get_api_reference
 
 
 def build_system_prompt(spec, references=()):

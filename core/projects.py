@@ -17,7 +17,7 @@ import os
 
 from sugar3 import env
 
-from aodstudio.core.spec import ActivitySpec
+from core.spec import ActivitySpec
 
 
 def get_projects_root(root_path=None):

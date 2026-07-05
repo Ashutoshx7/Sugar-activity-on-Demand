@@ -11,8 +11,8 @@ import time
 
 from sugar3.activity import bundlebuilder
 
-from aodstudio.core.licenses import get_license
-from aodstudio.generation.templates import render_activity_source
+from core.licenses import get_license
+from generation.templates import render_activity_source
 
 
 @dataclass

@@ -5,11 +5,11 @@
 import unittest
 from unittest import mock
 
-from aodstudio.core.spec import ActivitySpec
-from aodstudio.generation.templates import render_activity_source
-from aodstudio.generation.generator import enrich_plan
-from aodstudio.generation.validator import validate_activity_source_for_request
-from aodstudio.generation.validator import validate_source
+from core.spec import ActivitySpec
+from generation.templates import render_activity_source
+from generation.generator import enrich_plan
+from generation.validator import validate_activity_source_for_request
+from generation.validator import validate_source
 
 
 class TestAodValidator(unittest.TestCase):
@@ -30,7 +30,7 @@ class TestAodValidator(unittest.TestCase):
 
     def test_rejects_optional_modules_missing_at_runtime(self):
         with mock.patch(
-                'aodstudio.generation.validator._module_available',
+                'generation.validator._module_available',
                 return_value=False):
             report = validate_source('import sugargame\n')
         self.assertTrue(any(
@@ -39,7 +39,7 @@ class TestAodValidator(unittest.TestCase):
 
     def test_accepts_optional_modules_present_at_runtime(self):
         with mock.patch(
-                'aodstudio.generation.validator._module_available',
+                'generation.validator._module_available',
                 return_value=True):
             report = validate_source('import sugargame\nimport pygame\n')
         self.assertFalse(any(
@@ -47,7 +47,7 @@ class TestAodValidator(unittest.TestCase):
             report.errors)
 
     def test_codegen_prompt_bans_pygame_when_unavailable(self):
-        from aodstudio.generation import codegen as aodcodegen
+        from generation import codegen as aodcodegen
 
         spec = ActivitySpec(
             'Racer', 'A space racer 2d game.', 'games', 'MIT')

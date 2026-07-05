@@ -8,7 +8,7 @@ import stat
 import tempfile
 import unittest
 
-from aodstudio.llm.credentials import AODCredentialStore
+from llm.credentials import AODCredentialStore
 
 
 class TestAodCredentialStore(unittest.TestCase):

@@ -13,7 +13,7 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gdk  # noqa: E402
 from gi.repository import Gtk  # noqa: E402
 
-from aodstudio.ui.panel import CreateAIActivityPanel  # noqa: E402
+from ui.panel import CreateAIActivityPanel  # noqa: E402
 
 
 class AODStudioWindow(Gtk.Window):

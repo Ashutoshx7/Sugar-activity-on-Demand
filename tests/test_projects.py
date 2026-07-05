@@ -9,13 +9,13 @@ import tempfile
 import unittest
 from unittest import mock
 
-from aodstudio.core.projects import build_spec_from_plan
-from aodstudio.core.projects import find_session_for_project
-from aodstudio.core.projects import get_projects_root
-from aodstudio.core.projects import list_generated_projects
-from aodstudio.service.sessions import AODRevision
-from aodstudio.service.sessions import AODSession
-from aodstudio.core.spec import ActivitySpec
+from core.projects import build_spec_from_plan
+from core.projects import find_session_for_project
+from core.projects import get_projects_root
+from core.projects import list_generated_projects
+from service.sessions import AODRevision
+from service.sessions import AODSession
+from core.spec import ActivitySpec
 
 
 def _write_project(root, dirname, plan, with_icon=True, with_bundle=False):

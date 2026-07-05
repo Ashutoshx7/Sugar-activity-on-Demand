@@ -15,9 +15,9 @@ class TestStudioDecoupling(unittest.TestCase):
     def test_panel_imports_without_any_jarabe_module(self):
         code = (
             'import sys\n'
-            'import aodstudio.ui.panel\n'
-            'import aodstudio.ui.window\n'
-            'import aodstudio.main\n'
+            'import ui.panel\n'
+            'import ui.window\n'
+            'import main\n'
             'bad = [m for m in sys.modules if m.startswith("jarabe")]\n'
             'assert not bad, "jarabe leaked into standalone studio: %s" '
             '% bad\n'
@@ -34,7 +34,7 @@ class TestStudioDecoupling(unittest.TestCase):
             % (completed.stdout, completed.stderr))
 
     def test_clean_generation_error_text_strips_pipeline_prefixes(self):
-        from aodstudio.ui.panel import _clean_generation_error_text
+        from ui.panel import _clean_generation_error_text
 
         self.assertEqual(
             'Drawing requests must use a Gtk.DrawingArea draw surface.',
@@ -53,7 +53,7 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 
-from aodstudio.ui.panel import CreateAIActivityPanel
+from ui.panel import CreateAIActivityPanel
 
 window = Gtk.OffscreenWindow()
 panel = CreateAIActivityPanel()
@@ -88,7 +88,7 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 
-from aodstudio.ui.panel import CreateAIActivityPanel
+from ui.panel import CreateAIActivityPanel
 
 
 def pump():

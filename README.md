@@ -89,19 +89,10 @@ sudo apt install python3-gi gir1.2-gtk-3.0 python3-sugar3 sugar-toolkit-gtk3
 
 ## Setup & run
 
-**From a checkout** (no install):
-
 ```sh
 git clone https://github.com/Ashutoshx7/Sugar-activity-on-Demand.git
 cd Sugar-activity-on-Demand
-python3 bin/sugar-aod-studio        # or: python3 -m aodstudio
-```
-
-**Installed:**
-
-```sh
-pip install .
-sugar-aod-studio
+python3 bin/sugar-aod-studio        # or: python3 main.py
 ```
 
 ### Connect an AI model
@@ -143,14 +134,15 @@ call the provider you chose.
 
 ```sh
 python3 -m pytest tests/ -q     # 150 tests: pipeline, providers, UI smoke
-python3 -m flake8 aodstudio/
+python3 -m flake8 core llm generation service exports preview ui main.py
 ```
 
-The package is organized by domain — `core/` (spec, licenses,
-projects), `llm/` (providers, credentials, prompt enhancement),
-`generation/` (pipeline, RAG, codegen, validation, refinement),
-`service/` (job queue, sessions), `packaging/`, `preview/`, and `ui/`.
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full map.
+The code is organized by domain at the repository root — `core/`
+(spec, licenses, projects), `llm/` (providers, credentials, prompt
+enhancement), `generation/` (pipeline, RAG, codegen, validation,
+refinement), `service/` (job queue, sessions), `exports/` (Flatpak),
+`preview/`, and `ui/`. See
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full map.
 A test enforces that no `jarabe` (Sugar shell) module is ever imported.
 
 ## Provenance

@@ -9,12 +9,12 @@ import tempfile
 import unittest
 from unittest import mock
 
-from aodstudio.generation.generator import enrich_plan
-from aodstudio.llm.providers import ProviderError
-from aodstudio.generation.pipeline import generate_activity
-from aodstudio.generation.pipeline import PipelineError
-from aodstudio.core.spec import ActivitySpec
-from aodstudio.generation.templates import render_activity_source
+from generation.generator import enrich_plan
+from llm.providers import ProviderError
+from generation.pipeline import generate_activity
+from generation.pipeline import PipelineError
+from core.spec import ActivitySpec
+from generation.templates import render_activity_source
 
 
 class _FakeProvider:
@@ -289,7 +289,7 @@ class TestAodPipeline(unittest.TestCase):
             })
             return []
 
-        with mock.patch('aodstudio.generation.pipeline.search', fake_search):
+        with mock.patch('generation.pipeline.search', fake_search):
             generate_activity(
                 self.spec,
                 self.output_root,

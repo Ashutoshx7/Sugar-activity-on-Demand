@@ -14,7 +14,7 @@ import zipfile
 from sugar3.bundle.helpers import bundle_from_archive
 from sugar3.bundle.helpers import bundle_from_dir
 
-from aodstudio.core.spec import LICENSE_IDS
+from core.spec import LICENSE_IDS
 
 
 ALLOWED_IMPORT_ROOTS = {

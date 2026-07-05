@@ -4,8 +4,8 @@
 
 import unittest
 
-from aodstudio.core.spec import ActivitySpec
-from aodstudio.core.spec import name_from_prompt
+from core.spec import ActivitySpec
+from core.spec import name_from_prompt
 
 
 class TestActivitySpec(unittest.TestCase):

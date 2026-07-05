@@ -9,19 +9,19 @@ import time
 import unittest
 import zipfile
 
-from aodstudio.llm.credentials import AODCredentialStore
-from aodstudio.generation.generator import enrich_plan
-from aodstudio.generation.pipeline import package_generation_result
-from aodstudio.service.jobs import AODJobStore
-from aodstudio.service.jobs import STATUS_FAILED
-from aodstudio.service.jobs import STATUS_FINISHED
-from aodstudio.service.sessions import AODSessionStore
-from aodstudio.service.sessions import ROLE_ASSISTANT
-from aodstudio.service.sessions import ROLE_USER
-from aodstudio.service.sessions import TYPE_RESULT
-from aodstudio.service.service import AODService
-from aodstudio.core.spec import ActivitySpec
-from aodstudio.generation.templates import render_activity_source
+from llm.credentials import AODCredentialStore
+from generation.generator import enrich_plan
+from generation.pipeline import package_generation_result
+from service.jobs import AODJobStore
+from service.jobs import STATUS_FAILED
+from service.jobs import STATUS_FINISHED
+from service.sessions import AODSessionStore
+from service.sessions import ROLE_ASSISTANT
+from service.sessions import ROLE_USER
+from service.sessions import TYPE_RESULT
+from service.service import AODService
+from core.spec import ActivitySpec
+from generation.templates import render_activity_source
 
 
 class TestAodService(unittest.TestCase):

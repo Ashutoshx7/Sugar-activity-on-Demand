@@ -4,12 +4,12 @@
 
 import json
 
-from aodstudio.generation.prompts import extract_json_object
-from aodstudio.generation.rag import get_api_reference
-from aodstudio.generation.validator import ALLOWED_IMPORT_ROOTS
-from aodstudio.generation.validator import FORBIDDEN_CALLS
-from aodstudio.generation.validator import FORBIDDEN_IMPORT_ROOTS
-from aodstudio.generation.validator import _module_available
+from generation.prompts import extract_json_object
+from generation.rag import get_api_reference
+from generation.validator import ALLOWED_IMPORT_ROOTS
+from generation.validator import FORBIDDEN_CALLS
+from generation.validator import FORBIDDEN_IMPORT_ROOTS
+from generation.validator import _module_available
 
 
 _CODE_SIZE_INSTRUCTIONS = {

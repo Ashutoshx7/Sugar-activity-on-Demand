@@ -12,7 +12,7 @@ import uuid
 
 from sugar3 import env
 
-from aodstudio.core.spec import ActivitySpec
+from core.spec import ActivitySpec
 
 
 ROLE_USER = 'user'

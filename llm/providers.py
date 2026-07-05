@@ -10,9 +10,9 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from aodstudio.generation.prompts import extract_json_object
-from aodstudio.generation.codegen import extract_activity_source
-from aodstudio.generation.codegen import extract_activity_source_from_response
+from generation.prompts import extract_json_object
+from generation.codegen import extract_activity_source
+from generation.codegen import extract_activity_source_from_response
 
 
 class ProviderError(Exception):

@@ -4,9 +4,9 @@
 
 import unittest
 
-from aodstudio.generation.prompts import build_system_prompt
-from aodstudio.generation.prompts import extract_json_object
-from aodstudio.core.spec import ActivitySpec
+from generation.prompts import build_system_prompt
+from generation.prompts import extract_json_object
+from core.spec import ActivitySpec
 
 
 class TestAodPrompts(unittest.TestCase):

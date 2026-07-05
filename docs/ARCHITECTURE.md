@@ -1,9 +1,8 @@
 # Architecture
 
 ```
-aodstudio/
-├── main.py            entry point: dependency check, theme setup, Gtk.main
-├── __main__.py        `python3 -m aodstudio`
+Sugar-activity-on-Demand/
+├── main.py                       entry point: dependency check, theme setup, Gtk.main
 ├── core/              foundations shared by everything
 │   ├── spec.py        ActivitySpec — the validated generation request
 │   ├── licenses.py    license texts and metadata
@@ -26,7 +25,7 @@ aodstudio/
 │   ├── queue.py       worker queue
 │   ├── jobs.py        persistent job records
 │   └── sessions.py    prompt/refinement conversations and revisions
-├── packaging/
+├── exports/
 │   └── flatpak.py     buildable Flatpak sources / best-effort bundles
 ├── preview/
 │   └── runner.py      run generated activities in-process, shell-free
@@ -38,7 +37,7 @@ aodstudio/
 ```
 
 **Layering** (imports point downward only, module-level):
-`ui` → `service` → `generation` → `llm` → `core`, with `packaging` and
+`ui` → `service` → `generation` → `llm` → `core`, with `exports` and
 `preview` as leaves used by `ui`/`generation`. `llm/providers` reaches
 into `generation/codegen+prompts` for response extraction — a
 deliberate exception with no module-level cycle.
@@ -74,6 +73,6 @@ the two:
 | `model/aodjobs.py` | `service/jobs.py` |
 | `model/aodqueue.py` | `service/queue.py` |
 | `model/aodsessions.py` | `service/sessions.py` |
-| `model/aodflatpak.py` | `packaging/flatpak.py` |
+| `model/aodflatpak.py` | `exports/flatpak.py` |
 | `model/aodpreview.py` | `preview/runner.py` |
 | `desktop/homebox.py` (panel part) | `ui/panel.py` (+ `ring.py`, `theme.py`) |

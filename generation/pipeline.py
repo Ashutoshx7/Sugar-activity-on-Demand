@@ -9,28 +9,28 @@ from dataclasses import replace
 
 from sugar3 import env
 
-from aodstudio.generation.codegen import build_codegen_system_prompt
-from aodstudio.llm.enhance import enhance_prompt
-from aodstudio.llm.enhance import needs_enhancement
-from aodstudio.generation.codegen import build_codegen_user_prompt
-from aodstudio.generation.generator import apply_license_to_project
-from aodstudio.generation.generator import build_plan
-from aodstudio.generation.generator import create_prototype_activity
-from aodstudio.generation.generator import enrich_plan
-from aodstudio.generation.generator import normalize_plan
-from aodstudio.generation.generator import package_project
-from aodstudio.generation.generator import read_project_files
-from aodstudio.llm.providers import ProviderError
-from aodstudio.llm.providers import get_configured_provider
-from aodstudio.generation.prompts import build_system_prompt
-from aodstudio.generation.prompts import build_user_prompt
-from aodstudio.generation.rag import build_corpus
-from aodstudio.generation.rag import search
-from aodstudio.generation.refine import build_refine_system_prompt
-from aodstudio.generation.refine import build_refine_user_prompt
-from aodstudio.generation.refine import parse_search_replace
-from aodstudio.generation.refine import apply_patches
-from aodstudio.generation.validator import validate_activity_source_for_request
+from generation.codegen import build_codegen_system_prompt
+from llm.enhance import enhance_prompt
+from llm.enhance import needs_enhancement
+from generation.codegen import build_codegen_user_prompt
+from generation.generator import apply_license_to_project
+from generation.generator import build_plan
+from generation.generator import create_prototype_activity
+from generation.generator import enrich_plan
+from generation.generator import normalize_plan
+from generation.generator import package_project
+from generation.generator import read_project_files
+from llm.providers import ProviderError
+from llm.providers import get_configured_provider
+from generation.prompts import build_system_prompt
+from generation.prompts import build_user_prompt
+from generation.rag import build_corpus
+from generation.rag import search
+from generation.refine import build_refine_system_prompt
+from generation.refine import build_refine_user_prompt
+from generation.refine import parse_search_replace
+from generation.refine import apply_patches
+from generation.validator import validate_activity_source_for_request
 
 
 class PipelineError(Exception):
