@@ -150,6 +150,21 @@ class _RuntimeCrashRetryProvider(_FakeProvider):
         return self.clean_source
 
 
+class _CriticOkProvider(_CodegenProvider):
+    """Codegen provider whose critic review replies OK."""
+
+    def __init__(self, source):
+        _CodegenProvider.__init__(self, source)
+        self.critic_calls = 0
+
+    def generate_text(self, system_prompt, user_prompt, timeout=120,
+                      stream_callback=None):
+        if 'reviewing a Sugar activity' not in system_prompt:
+            raise AssertionError('Expected the critic system prompt')
+        self.critic_calls += 1
+        return 'OK'
+
+
 class _FailingCodegenProvider(_FakeProvider):
 
     def generate_activity_source(self, system_prompt, user_prompt,
@@ -503,6 +518,19 @@ class TestAodPipeline(unittest.TestCase):
         self.assertEqual('provider', result.plan['code_source'])
         self.assertEqual(2, provider.codegen_calls)
         self.assertIn('DrawingArea', result.files['activity.py'])
+
+    def test_critic_round_runs_after_accepted_source(self):
+        provider = _CriticOkProvider(_valid_activity_source(self.spec))
+        with mock.patch.dict(os.environ, {'AOD_CRITIC': 'on'}):
+            result = generate_activity(
+                self.spec,
+                self.output_root,
+                provider=provider,
+                enhance=False,
+            )
+        self.assertEqual(1, provider.critic_calls)
+        self.assertEqual('ok', result.plan['critic'])
+        self.assertEqual('provider', result.plan['code_source'])
 
     def test_runtime_check_marker_recorded_when_disabled(self):
         provider = _CodegenProvider(_valid_activity_source(self.spec))
