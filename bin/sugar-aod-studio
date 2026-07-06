@@ -19,7 +19,10 @@
 import os
 import sys
 
-repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# realpath, not abspath: the launcher may be a symlink on PATH
+# (~/.local/bin/sugar-aod-studio -> this file) and the repo root must
+# come from the real location.
+repo_root = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 if repo_root not in sys.path:
     sys.path.insert(0, repo_root)
 

@@ -126,6 +126,18 @@ Or run:
 python3 main.py
 ```
 
+Optionally, install the launcher for your user — `sugar-aod-studio`
+then works from any directory and the studio appears in your app menu:
+
+```sh
+./install.sh              # ./install.sh --uninstall to remove
+sugar-aod-studio
+```
+
+The app keeps running from the checkout (`git pull` is the upgrade
+path); `pip install` is intentionally not supported because the GTK
+and Sugar toolkit dependencies come from your distribution, not PyPI.
+
 ---
 
 ## Connect an AI model
