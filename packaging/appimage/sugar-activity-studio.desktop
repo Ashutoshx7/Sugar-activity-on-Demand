@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Sugar Activity Studio
+Comment=Generate real Sugar learning activities from a plain-language idea
+Exec=python3.12
+Icon=sugar-aod-studio
+Terminal=false
+Categories=Education;GTK;
+StartupNotify=true

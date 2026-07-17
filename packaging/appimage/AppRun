@@ -1,0 +1,54 @@
+#!/bin/sh
+# Copyright (C) 2026 Sugar Labs
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# AppRun for the Sugar Activity Studio AppImage.  Points the bundled
+# Python interpreter at the bundled GTK/PyGObject/sugar3 stack so the
+# studio launches on a desktop that has none of them installed.
+#
+# NB: never delegate to the repo's start.sh — it does `exec env -i ...`
+# which would wipe every variable set below.
+
+HERE="$(dirname "$(readlink -f "$0")")"
+export APPDIR="$HERE"
+
+ARCH_LIB="$HERE/usr/lib/x86_64-linux-gnu"
+APP_DIR="$HERE/usr/share/sugar-activity-studio"
+
+# Native libraries: the GTK stack plus libsugarext.
+export LD_LIBRARY_PATH="$ARCH_LIB:$HERE/usr/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+
+# GObject-introspection typelibs (Gtk, Gdk, Rsvg, SugarExt, ...).
+export GI_TYPELIB_PATH="$ARCH_LIB/girepository-1.0${GI_TYPELIB_PATH:+:$GI_TYPELIB_PATH}"
+
+# Fully self-contained Python: ignore the host's site-packages entirely.
+export PYTHONHOME="$HERE/usr"
+export PYTHONNOUSERSITE=1
+export PYTHONPATH="$HERE/usr/lib/python3.12:$HERE/usr/lib/python3.12/lib-dynload:$HERE/usr/lib/python3/dist-packages:$APP_DIR"
+
+# gdk-pixbuf: use the bundled, relocated loader cache (SVG/PNG icons).
+export GDK_PIXBUF_MODULEDIR="$ARCH_LIB/gdk-pixbuf-2.0/2.10.0/loaders"
+export GDK_PIXBUF_MODULE_FILE="$ARCH_LIB/gdk-pixbuf-2.0/2.10.0/loaders.cache"
+
+# GSettings schemas (sugar3.graphics.style reads org.sugarlabs.font).
+export GSETTINGS_SCHEMA_DIR="$HERE/usr/share/glib-2.0/schemas"
+
+# Find bundled icons/themes/schemas before anything on the host.
+export XDG_DATA_DIRS="$HERE/usr/share:${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
+
+# GTK module/theme discovery.
+export GTK_PATH="$ARCH_LIB/gtk-3.0"
+export GTK_EXE_PREFIX="$HERE/usr"
+export GTK_DATA_PREFIX="$HERE/usr"
+
+# Use the bundled fontconfig if the GTK plugin shipped one.
+if [ -f "$HERE/usr/etc/fonts/fonts.conf" ]; then
+    export FONTCONFIG_PATH="$HERE/usr/etc/fonts"
+    export FONTCONFIG_FILE="$HERE/usr/etc/fonts/fonts.conf"
+fi
+
+# main.py imports `from ui.window import ...`; run it with the app dir as
+# cwd and on PYTHONPATH so those imports resolve.
+cd "$APP_DIR" || exit 1
+exec "$HERE/usr/bin/python3" "$APP_DIR/main.py" "$@"

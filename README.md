@@ -158,6 +158,32 @@ bundle instead, run `python3 setup.py dist_xo` (produces
 > separate `sugar-activity3` window rather than as fully ring-integrated
 > activities — that integration is planned separately.
 
+### Portable AppImage (one clickable file)
+
+To get a single file you can double-click to launch the studio — with
+GTK, PyGObject, and the Sugar toolkit all bundled, so nothing needs to be
+installed on the target machine — build an AppImage:
+
+```sh
+./packaging/appimage/build-appimage.sh
+```
+
+It produces `dist/Sugar_Activity_Studio-x86_64.AppImage` (~54 MB). Mark it
+executable and double-click, or run it directly:
+
+```sh
+chmod +x dist/Sugar_Activity_Studio-x86_64.AppImage
+./dist/Sugar_Activity_Studio-x86_64.AppImage
+```
+
+The build downloads `linuxdeploy`, its GTK plugin, and `appimagetool` on
+first run (cached under `packaging/appimage/tools/`).
+
+> Caveats: the AppImage is built against the host's glibc, so it runs on
+> **modern** desktops (roughly Ubuntu 24.04 / Debian 13 and newer); for
+> older distributions, build it inside an older base image. Double-click
+> needs FUSE — otherwise run with `--appimage-extract-and-run`.
+
 ---
 
 ## Connect an AI model

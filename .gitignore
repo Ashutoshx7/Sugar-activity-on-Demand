@@ -5,3 +5,5 @@ dist/
 build/
 .pytest_cache/
 *.xo
+*.AppImage
+packaging/appimage/tools/
