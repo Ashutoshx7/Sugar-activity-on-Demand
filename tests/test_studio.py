@@ -153,9 +153,11 @@ assert len(panel._home_ring_icons) == 0
 assert panel._enhance_button is not None
 assert panel._selected_options['enhance'] == 'on'
 
+# "Create new" now opens the prompt directly (the MODIFY/CREATE chooser
+# was removed), so the stack goes straight to the create view.
 panel._CreateAIActivityPanel__home_create_new_cb(None)
 pump()
-assert panel._stack.get_visible_child_name() == 'choose'
+assert panel._stack.get_visible_child_name() == 'create'
 
 panel._CreateAIActivityPanel__back_to_home_cb(None)
 pump()
