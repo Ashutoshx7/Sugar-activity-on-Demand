@@ -1470,6 +1470,30 @@ class CreateAIActivityPanel(Gtk.EventBox):
             _('⛶ Fullscreen'), self.__preview_fullscreen_toggle_cb)
         top.pack_end(self._preview_fullscreen_button, False, False, 0)
 
+        # Live-edit is toggled right here on the preview, in the corner;
+        # describing the change happens in the chat on the left.
+        live_toggle = Gtk.HBox(spacing=0)
+        live_toggle.get_style_context().add_class(
+            'create-ai-live-toggle-group')
+        live_toggle.set_valign(Gtk.Align.CENTER)
+        live_caption = Gtk.Label(_('Live edit'))
+        live_caption.get_style_context().add_class('create-ai-meta-note')
+        self._live_edit_on_button = self._create_live_toggle_button(
+            _('On'), True)
+        self._live_edit_off_button = self._create_live_toggle_button(
+            _('Off'), False)
+        self._live_edit_on_button.set_tooltip_text(
+            _('Click or drag on the preview to pick a target, then '
+              'describe the change in the chat.'))
+        self._live_edit_off_button.set_tooltip_text(
+            _('Play mode: clicks go straight to the activity.'))
+        live_toggle.pack_start(self._live_edit_on_button, False, False, 0)
+        live_toggle.pack_start(self._live_edit_off_button, False, False, 0)
+        live_toggle.show_all()
+        top.pack_end(live_toggle, False, False, style.zoom(4))
+        top.pack_end(live_caption, False, False, 0)
+        live_caption.show()
+
         top.pack_end(self._create_plain_button(
             _('Review and install'), self.__review_and_install_cb),
             False, False, 0)
@@ -1524,8 +1548,6 @@ class CreateAIActivityPanel(Gtk.EventBox):
         preview_scroll.add(self._create_preview_frame())
         preview_page.pack_start(preview_scroll, True, True, 0)
         preview_scroll.show()
-        self._live_edit_panel = self._create_live_edit_panel()
-        preview_page.pack_start(self._live_edit_panel, False, False, 0)
         self._ask_bar = self._create_ask_bar()
         preview_page.pack_start(self._ask_bar, False, False, 0)
         self._studio_mode_stack.add_named(preview_page, 'preview')
@@ -3899,7 +3921,9 @@ class CreateAIActivityPanel(Gtk.EventBox):
             pass
 
     def _focus_live_edit_entry(self):
-        if self._preview_is_fullscreen and self._ask_bar_entry is not None:
+        # Describing the change happens in the chat / ask bar now, so
+        # send focus there once a target is picked on the preview.
+        if self._ask_bar_entry is not None:
             self._ask_bar_entry.grab_focus()
         elif self._live_edit_entry is not None:
             self._live_edit_entry.grab_focus()
