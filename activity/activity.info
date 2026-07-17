@@ -1,0 +1,10 @@
+[Activity]
+name = Sugar Activity Studio
+bundle_id = org.sugarlabs.SugarActivityStudio
+icon = activity
+exec = sugar-activity3 activity.StudioActivity
+activity_version = 1
+license = GPL-3.0-or-later
+max_participants = 1
+summary = Generate real Sugar learning activities from a plain-language idea
+tags = Education Tools

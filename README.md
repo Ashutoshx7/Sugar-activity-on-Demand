@@ -138,6 +138,26 @@ The app keeps running from the checkout (`git pull` is the upgrade
 path); `pip install` is intentionally not supported because the GTK
 and Sugar toolkit dependencies come from your distribution, not PyPI.
 
+### Run from the Sugar activity ring
+
+The studio is also a Sugar activity, so it can be launched from the
+activity ring like any other activity — no terminal needed:
+
+```sh
+./install.sh --ring        # ./install.sh --uninstall to remove
+```
+
+This runs `python3 setup.py dev`, which symlinks this checkout into
+`~/Activities/SugarActivityStudio.activity`. Open the Sugar shell and
+**Sugar Activity Studio** appears in the ring; the shell launches it via
+`sugar-activity3 activity.StudioActivity`. To build a distributable
+bundle instead, run `python3 setup.py dist_xo` (produces
+`dist/SugarActivityStudio-1.xo`).
+
+> Note: activities you generate from inside the studio still open in a
+> separate `sugar-activity3` window rather than as fully ring-integrated
+> activities — that integration is planned separately.
+
 ---
 
 ## Connect an AI model
