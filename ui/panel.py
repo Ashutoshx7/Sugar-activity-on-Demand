@@ -1384,6 +1384,37 @@ class CreateAIActivityPanel(Gtk.EventBox):
         if self._chat_messages_box is None:
             return
 
+        if from_user:
+            self._add_chat_bubble(text, from_user=True, scroll=scroll)
+            return
+
+        # An AI reply arrives as its own little series of bubbles — one
+        # per paragraph — each drifting in and streaming after the one
+        # before it settles. Reads calmer than a single wall of text.
+        paragraphs = [p.strip() for p in re.split(r'\n\s*\n', text)
+                      if p.strip()]
+        if not paragraphs:
+            return
+        self._stream_ai_paragraphs(paragraphs, 0, scroll)
+
+    def _stream_ai_paragraphs(self, paragraphs, index, scroll):
+        if index >= len(paragraphs):
+            return
+
+        def on_done():
+            # A short, gentle beat before the next block appears.
+            def next_block():
+                self._stream_ai_paragraphs(paragraphs, index + 1, scroll)
+                return False
+            GLib.timeout_add(200, next_block)
+
+        last = index == len(paragraphs) - 1
+        self._add_chat_bubble(
+            paragraphs[index], from_user=False, scroll=scroll,
+            stream=True, on_done=None if last else on_done)
+
+    def _add_chat_bubble(self, text, from_user=False, scroll=True,
+                         stream=False, on_done=None):
         row = Gtk.HBox()
         bubble = Gtk.EventBox()
         bubble.get_style_context().add_class('create-ai-chat-bubble')
@@ -1392,7 +1423,7 @@ class CreateAIActivityPanel(Gtk.EventBox):
         else:
             bubble.get_style_context().add_class('create-ai-chat-bubble-ai')
 
-        label = Gtk.Label(text)
+        label = Gtk.Label()
         label.get_style_context().add_class('create-ai-chat-text')
         label.set_line_wrap(True)
         label.set_max_width_chars(40)
@@ -1417,26 +1448,79 @@ class CreateAIActivityPanel(Gtk.EventBox):
         bubble.show()
         row.show()
 
+        # Every bubble drifts in with a soft fade; streamed ones then
+        # reveal their text in gentle word-chunks as it lands.
+        self._fade_in_widget(row)
+        if stream:
+            self._stream_chat_text(label, text, scroll=scroll,
+                                   on_done=on_done)
+        else:
+            label.set_text(text)
+            if on_done is not None:
+                on_done()
+
         if scroll:
             GObject.idle_add(self.__scroll_chat_to_bottom)
+
+    def _fade_in_widget(self, widget, duration=340000.0, rise=None):
+        # A soft entrance: the bubble drifts up a few pixels while it
+        # fades in, easing to a gentle stop — calmer than a plain fade.
+        if rise is None:
+            rise = style.zoom(12)
+        widget.set_opacity(0.0)
+        widget.set_margin_top(rise)
+        state = {'start': None}
+
+        def tick(w, frame_clock):
+            now = frame_clock.get_frame_time()
+            if state['start'] is None:
+                state['start'] = now
+            progress = min(1.0, (now - state['start']) / duration)
+            eased = 1.0 - (1.0 - progress) ** 3
+            w.set_opacity(eased)
+            w.set_margin_top(int(round(rise * (1.0 - eased))))
+            if progress >= 1.0:
+                w.set_opacity(1.0)
+                w.set_margin_top(0)
+                return GLib.SOURCE_REMOVE
+            return GLib.SOURCE_CONTINUE
+
+        widget.add_tick_callback(tick)
+
+    def _stream_chat_text(self, label, text, scroll=True, on_done=None):
+        # Reveal the text a few characters at a time, always snapping to
+        # the next word boundary so words never appear half-formed. The
+        # original string is sliced so newlines and spacing stay intact.
+        total = len(text)
+        if total == 0:
+            if on_done is not None:
+                on_done()
+            return
+        state = {'n': 0}
+
+        def step():
+            n = min(total, state['n'] + 7)
+            while n < total and not text[n].isspace():
+                n += 1
+            state['n'] = n
+            label.set_text(text[:n])
+            if scroll:
+                self.__scroll_chat_to_bottom()
+            if n >= total:
+                label.set_text(text)
+                if on_done is not None:
+                    on_done()
+                return False
+            return True
+
+        label.set_text('')
+        GLib.timeout_add(24, step)
 
     def _append_chat_status(self, text, scroll=True):
-        if self._chat_messages_box is None:
-            return
-
-        row = Gtk.HBox()
-        label = Gtk.Label(_('- %s') % text)
-        label.get_style_context().add_class('create-ai-chat-status')
-        label.set_xalign(0)
-        label.set_line_wrap(True)
-        label.set_max_width_chars(42)
-        row.pack_start(label, True, True, 0)
-        self._chat_messages_box.pack_start(row, False, False, 0)
-        label.show()
-        row.show()
-
-        if scroll:
-            GObject.idle_add(self.__scroll_chat_to_bottom)
+        # Process-status lines ("- Generating activity", "- Planner: ...")
+        # are intentionally not shown in the chat: the sidebar keeps only
+        # the real conversation. Kept as a no-op so callers stay valid.
+        return
 
     def __scroll_chat_to_bottom(self):
         if self._chat_scroll is None:
