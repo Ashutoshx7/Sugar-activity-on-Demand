@@ -11,6 +11,7 @@ import os
 import re
 import zipfile
 
+from sugar3.bundle.bundle import MalformedBundleException
 from sugar3.bundle.helpers import bundle_from_archive
 from sugar3.bundle.helpers import bundle_from_dir
 
@@ -124,17 +125,31 @@ def validate_source(source):
             if call_name in FORBIDDEN_CALLS:
                 report.errors.append('Forbidden call: %s' % call_name)
 
+    # Names bound to sugar3's Activity via `from sugar3.activity.activity
+    # import Activity` (including aliases) are as canonical as the
+    # `activity.Activity` attribute style and must be accepted too.
+    imported_activity_names = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom) and node.module and \
+                node.module.startswith('sugar3.activity'):
+            for alias in node.names:
+                if alias.name == 'Activity':
+                    imported_activity_names.add(alias.asname or alias.name)
+
     activity_classes = [
         node for node in tree.body
         if all((
             isinstance(node, ast.ClassDef),
             any(_base_name(base).endswith('activity.Activity')
+                or _base_name(base) in imported_activity_names
                 for base in getattr(node, 'bases', ())),
         ))
     ]
     if len(activity_classes) != 1:
         report.errors.append(
-            'Generated source must define exactly one Activity subclass.'
+            'Generated source must define exactly one Activity subclass '
+            '(subclass activity.Activity from sugar3.activity, or Activity '
+            'imported from sugar3.activity.activity).'
         )
         return report
 
@@ -205,9 +220,12 @@ def validate_activity_source_for_request(source, spec, plan=None):
             'Generated activity is too small to be a full learner activity.'
         )
 
+    # Trigger only on genuine drawing verbs.  Bare 'color'/'canvas'
+    # phrasing ("name the color of each fruit") used to force a
+    # DrawingArea onto activities that never needed one, hard-failing
+    # valid candidates and thrashing the repair loop.
     if _has_any(prompt_words, (
-            'draw', 'drawing', 'paint', 'painting', 'sketch', 'canvas',
-            'color', 'colour')):
+            'draw', 'drawing', 'paint', 'painting', 'sketch')):
         _require_source_terms(
             report,
             source_lower,
@@ -233,9 +251,19 @@ def validate_activity_source_for_request(source, spec, plan=None):
             'saving.',
         )
 
-    if _has_any(prompt_words, (
-            'two', 'pair', 'partner', 'partners', 'student', 'students',
-            'team', 'teams', 'together', 'collaborative', 'collaboration')):
+    # Bare 'two'/'student(s)' are audience or numeric phrasing ("a quiz
+    # for my students", "two-digit addition"), not proof of a two-learner
+    # activity; require an actual pairing phrase or pairing word.
+    two_learner_request = (
+        _has_any(prompt_words, (
+            'pair', 'pairs', 'partner', 'partners', 'team', 'teams',
+            'together', 'collaborative', 'collaboration')) or
+        re.search(
+            r'\b(two|2)\s+(players?|students?|learners?|kids|children|'
+            r'teams?)\b',
+            prompt.lower()) is not None
+    )
+    if two_learner_request:
         _require_source_terms(
             report,
             source_lower,
@@ -277,7 +305,7 @@ def validate_activity_source_for_request(source, spec, plan=None):
         _require_source_terms(
             report,
             source_lower,
-            ('8', 'grid', 'board', 'square'),
+            ('grid', 'board', 'square'),
             'Chess requests must include a visible 8x8 board or board '
             'state.',
         )
@@ -393,8 +421,13 @@ def validate_project(project_path):
     if os.path.isfile(info_path):
         report.extend(_validate_activity_info(info_path))
 
-    if bundle_from_dir(project_path) is None:
-        report.errors.append('Sugar cannot recognize the project directory.')
+    try:
+        if bundle_from_dir(project_path) is None:
+            report.errors.append(
+                'Sugar cannot recognize the project directory.')
+    except MalformedBundleException as error:
+        report.errors.append(
+            'Sugar cannot recognize the project directory: %s' % error)
 
     return report
 
@@ -428,7 +461,11 @@ def validate_bundle(bundle_path):
             report.warnings.append(
                 'XO root differs from the normalized activity name.'
             )
-    except (OSError, ValueError, zipfile.BadZipFile) as error:
+    except (OSError, ValueError, zipfile.BadZipFile,
+            MalformedBundleException) as error:
+        # sugar3 wraps zip errors and activity.info defects in
+        # MalformedBundleException (a plain Exception subclass), which
+        # used to escape this validator instead of becoming a report error.
         report.errors.append('Invalid XO bundle: %s' % error)
 
     return report
@@ -439,7 +476,7 @@ def _validate_activity_info(info_path):
     parser = configparser.ConfigParser(interpolation=None)
     try:
         parser.read(info_path, encoding='utf-8')
-    except configparser.Error as error:
+    except (configparser.Error, UnicodeDecodeError) as error:
         report.errors.append('Invalid activity.info: %s' % error)
         return report
 
@@ -521,7 +558,14 @@ def _has_any(words, candidates):
 
 
 def _require_source_terms(report, source_lower, terms, message):
-    if not any(term in source_lower for term in terms):
+    # Prefix-anchored matching: a term must start at a word boundary so
+    # 'turn' is found in 'turns'/'_turn' but never inside 'return', and
+    # 'active' never matches inside 'interactive'.  Plain substring
+    # matching made several of these requirements trivially true in any
+    # Python source.
+    if not any(
+            re.search(r'(?<![a-z0-9])' + re.escape(term), source_lower)
+            for term in terms):
         report.errors.append(message)
 
 

@@ -70,10 +70,10 @@ class TestAodValidator(unittest.TestCase):
     def test_requires_activity_structure(self):
         report = validate_source('class PlainObject:\n    pass\n')
         self.assertFalse(report.valid)
-        self.assertIn(
-            'Generated source must define exactly one Activity subclass.',
-            report.errors,
-        )
+        self.assertTrue(any(
+            error.startswith(
+                'Generated source must define exactly one Activity subclass')
+            for error in report.errors), report.errors)
 
     def test_rejects_invented_toolbar_and_adjustment_apis(self):
         spec = ActivitySpec(
@@ -146,6 +146,91 @@ class TestAodValidator(unittest.TestCase):
         report = validate_activity_source_for_request(source, spec, plan)
 
         self.assertTrue(report.valid, report.errors)
+
+    def test_solo_prompts_do_not_trigger_two_learner_or_drawing_gates(self):
+        # 'students' as audience phrasing, 'two' as numeric phrasing, and
+        # bare 'color' vocabulary must not force collaboration or drawing
+        # features onto a valid solo activity.
+        source = _PLAIN_ACTIVITY_SOURCE + \
+            "\n        button.set_tooltip_text('Add a note')\n"
+        for prompt in (
+                'A counting practice for my students.',
+                'A two-digit addition practice game.',
+                'Name the color of each fruit game.'):
+            spec = ActivitySpec('Solo Demo', prompt, 'logic_math', 'MIT')
+            plan = enrich_plan(spec, {'template': 'utility'})
+            report = validate_activity_source_for_request(source, spec, plan)
+            self.assertFalse(
+                any('Two-learner' in error or 'Drawing requests' in error
+                    for error in report.errors),
+                '%s -> %s' % (prompt, report.errors))
+
+    def test_real_pairing_phrases_still_trigger_two_learner_gate(self):
+        source = _PLAIN_ACTIVITY_SOURCE + \
+            "\n        button.set_tooltip_text('Add a note')\n"
+        spec = ActivitySpec(
+            'Pair Demo', 'Two students take turns and play together.',
+            'games', 'MIT')
+        plan = enrich_plan(spec, {'template': 'utility'})
+        report = validate_activity_source_for_request(source, spec, plan)
+        self.assertTrue(
+            any('Two-learner' in error for error in report.errors),
+            report.errors)
+
+    def test_source_terms_are_word_anchored(self):
+        # 'return' must not satisfy the 'turn' requirement; real 'turns'
+        # usage must.
+        base = _PLAIN_ACTIVITY_SOURCE + \
+            "\n        button.set_tooltip_text('Add a note')\n" + \
+            "\n        self._player = 'Player 1'\n"
+        spec = ActivitySpec(
+            'Pair Demo', 'Two students play together.', 'games', 'MIT')
+        plan = enrich_plan(spec, {'template': 'utility'})
+
+        report = validate_activity_source_for_request(base, spec, plan)
+        self.assertTrue(any(
+            'turn, role, or collaboration' in error
+            for error in report.errors), report.errors)
+
+        satisfied = base + "\n        self._turns = 0\n"
+        report = validate_activity_source_for_request(satisfied, spec, plan)
+        self.assertFalse(any(
+            'turn, role, or collaboration' in error
+            for error in report.errors), report.errors)
+
+    def test_imported_activity_base_class_style_is_accepted(self):
+        source = _PLAIN_ACTIVITY_SOURCE.replace(
+            'from sugar3.activity import activity',
+            'from sugar3.activity.activity import Activity',
+        ).replace(
+            'class GeneratedActivity(activity.Activity):',
+            'class GeneratedActivity(Activity):',
+        ).replace(
+            'activity.Activity.__init__(self, handle)',
+            'Activity.__init__(self, handle)',
+        )
+        report = validate_source(source)
+        self.assertFalse(any(
+            'exactly one Activity subclass' in error
+            for error in report.errors), report.errors)
+
+    def test_validate_bundle_reports_malformed_archives(self):
+        import tempfile
+        from generation.validator import validate_bundle
+
+        with tempfile.NamedTemporaryFile(
+                suffix='.xo', delete=False) as handle:
+            handle.write(b'this is not a zip file')
+            path = handle.name
+        try:
+            report = validate_bundle(path)
+        finally:
+            import os as _os
+            _os.unlink(path)
+        self.assertFalse(report.valid)
+        self.assertTrue(any(
+            'Invalid XO bundle' in error for error in report.errors),
+            report.errors)
 
     def _ui_spec(self, **kwargs):
         return ActivitySpec(

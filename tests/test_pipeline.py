@@ -115,7 +115,7 @@ class _RetryCodegenProvider(_FakeProvider):
     def generate_text(self, system_prompt, user_prompt, timeout=120,
                       stream_callback=None):
         self.repair_calls += 1
-        if 'Generated source must define exactly one Activity subclass.' \
+        if 'Generated source must define exactly one Activity subclass' \
                 not in user_prompt:
             raise AssertionError('Missing validation feedback')
         return (
