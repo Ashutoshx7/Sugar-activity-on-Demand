@@ -3551,7 +3551,7 @@ class CreateAIActivityPanel(Gtk.EventBox):
             self._ask_bar_entry.grab_focus()
 
     def __ask_bar_send_cb(self, widget):
-        if self._ask_bar_entry is None or self._live_edit_entry is None:
+        if self._ask_bar_entry is None:
             return
 
         text = self._ask_bar_entry.get_text().strip()
@@ -3562,17 +3562,15 @@ class CreateAIActivityPanel(Gtk.EventBox):
 
         self._ask_bar_entry.set_text('')
         if self._live_edit_enabled:
-            self._live_edit_entry.set_text(text)
-            self.__live_edit_add_clicked_cb(widget)
-            return
-
-        # Play mode: send the request as a whole-activity refinement.
-        if self._generation_result is None:
-            self._set_live_edit_status(
-                _('Generate an activity before asking for changes.'))
-            return
-        self._set_live_edit_status(_('Refining...'))
-        self._submit_refinement_from_prompt(text, source='chat')
+            # Edit mode: apply the change to the selected preview target
+            # (defaults to the whole canvas when nothing was clicked).
+            self._set_live_edit_status(_('Refining the selected part...'))
+            self._submit_refinement_from_prompt(text, source='preview')
+        else:
+            # Play mode: refine the whole activity.  With no activity yet
+            # this starts a fresh generation from the prompt.
+            self._set_live_edit_status(_('Refining...'))
+            self._submit_refinement_from_prompt(text, source='chat')
 
     def _create_learning_sidebar(self):
         panel = Gtk.EventBox()

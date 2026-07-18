@@ -250,6 +250,54 @@ print('OFFSCREEN-TARGET-OK')
 '''
 
 
+_OFFSCREEN_ASK_BAR_SCRIPT = '''
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
+
+from ui.panel import CreateAIActivityPanel
+
+window = Gtk.OffscreenWindow()
+panel = CreateAIActivityPanel()
+window.add(panel)
+window.show_all()
+panel.reset_view()
+while Gtk.events_pending():
+    Gtk.main_iteration_do(False)
+
+assert panel._ask_bar_entry is not None, 'ask bar entry missing'
+
+# The ask bar must submit without depending on the removed live-edit
+# entry (which is always None now).
+calls = []
+panel._submit_refinement_from_prompt = (
+    lambda text, source='chat': calls.append((source, text)))
+send = panel._CreateAIActivityPanel__ask_bar_send_cb
+
+panel._live_edit_enabled = False
+panel._ask_bar_entry.set_text('make the score bigger')
+send(None)
+assert panel._ask_bar_entry.get_text() == '', 'entry not cleared after send'
+
+panel._live_edit_enabled = True
+panel._ask_bar_entry.set_text('change the button colour')
+send(None)
+
+# Blank input must not submit.
+panel._ask_bar_entry.set_text('   ')
+send(None)
+
+assert calls == [
+    ('chat', 'make the score bigger'),
+    ('preview', 'change the button colour'),
+], calls
+
+panel.destroy()
+window.destroy()
+print('OFFSCREEN-ASKBAR-OK')
+'''
+
+
 @unittest.skipUnless(
     _gtk_display_available(), 'needs a usable display server')
 class TestStudioOffscreen(unittest.TestCase):
@@ -287,6 +335,14 @@ class TestStudioOffscreen(unittest.TestCase):
             'offscreen smoke failed:\n%s%s'
             % (completed.stdout, completed.stderr))
         self.assertIn('OFFSCREEN-OK', completed.stdout)
+
+    def test_ask_bar_submits_in_both_modes(self):
+        completed = self._run_offscreen(_OFFSCREEN_ASK_BAR_SCRIPT)
+        self.assertEqual(
+            0, completed.returncode,
+            'ask bar test failed:\n%s%s'
+            % (completed.stdout, completed.stderr))
+        self.assertIn('OFFSCREEN-ASKBAR-OK', completed.stdout)
 
     def test_live_edit_targets_a_precise_canvas_point(self):
         completed = self._run_offscreen(_OFFSCREEN_TARGET_SCRIPT)
