@@ -60,7 +60,14 @@ def _build_corpus_uncached(roots):
     for root in roots:
         if not os.path.isdir(root):
             continue
-        for bundle_name in sorted(os.listdir(root)):
+        try:
+            bundle_names = sorted(os.listdir(root))
+        except OSError:
+            # An unreadable or just-removed root degrades to "no
+            # documents from that root"; it must not abort the whole
+            # generation job over an auxiliary scan.
+            continue
+        for bundle_name in bundle_names:
             bundle_path = os.path.join(root, bundle_name)
             if not os.path.isdir(bundle_path):
                 continue
@@ -117,6 +124,11 @@ def _get_roots_mtime(roots):
         if not os.path.isdir(root):
             continue
         try:
+            # The root's own mtime changes whenever a bundle is added or
+            # removed, catching removals (which leave the max child mtime
+            # unchanged) and archive-extracted installs whose directory
+            # mtimes were preserved from the archive.
+            latest = max(latest, os.stat(root).st_mtime)
             for bundle_name in os.listdir(root):
                 bundle_path = os.path.join(root, bundle_name)
                 if os.path.isdir(bundle_path):

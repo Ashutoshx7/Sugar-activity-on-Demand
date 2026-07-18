@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 import json
+import re
 
 from generation.prompts import extract_json_object
 from generation.rag import get_api_reference
@@ -296,7 +297,9 @@ def extract_activity_source(value):
     if isinstance(value, dict):
         files = value.get('files')
         if isinstance(files, dict):
-            source = files.get('activity.py') or files.get('activity_py') or ''
+            source = _string_or_nested(
+                files.get('activity.py')) or _string_or_nested(
+                files.get('activity_py')) or ''
             if not source:
                 for path, content in files.items():
                     if (isinstance(path, str)
@@ -312,7 +315,9 @@ def extract_activity_source(value):
                 if (isinstance(path, str)
                         and (path in ('activity.py', './activity.py')
                              or path.endswith('/activity.py'))):
-                    source = item.get('content') or item.get('source') or ''
+                    source = _string_or_nested(
+                        item.get('content')) or _string_or_nested(
+                        item.get('source')) or ''
                     break
         if not source:
             for key in ('activity_py', 'activity.py', 'source', 'code'):
@@ -353,6 +358,24 @@ def extract_activity_source(value):
             'Provider code response did not define GeneratedActivity.'
         )
     return source.rstrip() + '\n'
+
+
+def _string_or_nested(value):
+    """Return ``value`` as source text, descending one nested level.
+
+    Some models wrap the file body one level deeper (e.g.
+    ``{"activity.py": {"content": "..."}}``); a non-string value used to
+    reach ``.strip()`` and crash with AttributeError instead of the clean
+    'did not include activity.py' error.
+    """
+    if isinstance(value, str):
+        return value
+    if isinstance(value, dict):
+        for key in ('content', 'source', 'code', 'text'):
+            nested = value.get(key)
+            if isinstance(nested, str):
+                return nested
+    return ''
 
 
 def extract_activity_source_from_response(text):
@@ -442,10 +465,30 @@ def _fenced_blocks(source):
 
 
 def _format_references(references):
+    # Prefer real activity.py source examples over manifest/pattern
+    # blurbs -- the prompt tells the model to follow the GTK/Sugar
+    # patterns in these references, which only works when it actually
+    # sees code.
+    code_docs = [
+        document for document in references
+        if str(getattr(document, 'source_path', '')).endswith('.py')
+    ]
+    other_docs = [
+        document for document in references if document not in code_docs
+    ]
+    chosen = (code_docs + other_docs)[:2]
+
     blocks = []
-    for index, document in enumerate(references[:1], 1):
-        text = ' '.join(getattr(document, 'text', '').split())
+    for index, document in enumerate(chosen, 1):
+        raw = getattr(document, 'text', '')
         title = getattr(document, 'title', 'Reference')
+        if document in code_docs:
+            # Keep newlines and indentation: whitespace-flattened Python
+            # is useless as a pattern reference.  Only collapse runs of
+            # blank lines.
+            text = re.sub(r'\n{3,}', '\n\n', raw).strip()
+        else:
+            text = ' '.join(raw.split())
         blocks.append(
             'Reference %d - %s:\n%s' % (index, title, text[:4000])
         )
