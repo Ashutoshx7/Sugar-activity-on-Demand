@@ -1480,6 +1480,8 @@ class CreateAIActivityPanel(Gtk.EventBox):
             try:
                 answers[qid] = getter()
             except Exception:
+                logging.exception(
+                    'Could not read guided answer for %r', qid)
                 answers[qid] = ''
         state['answers'] = answers
 

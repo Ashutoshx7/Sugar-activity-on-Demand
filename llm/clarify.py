@@ -15,6 +15,8 @@ activity prompt, which already drives both planning and code generation.
 import logging
 import re
 
+from core.spec import AGREED_PLAN_HEADER
+from core.spec import CONFIRMED_REQUIREMENTS_HEADER
 from core.spec import MAX_PROMPT_LENGTH
 from generation.prompts import extract_json_object
 
@@ -190,7 +192,7 @@ def format_answers(questions, answers):
 
     if not lines:
         return ''
-    return 'Confirmed requirements:\n%s' % '\n'.join(lines)
+    return '%s\n%s' % (CONFIRMED_REQUIREMENTS_HEADER, '\n'.join(lines))
 
 
 def build_activity_prompt(base_prompt, answers_text='', plan_text=''):
@@ -199,7 +201,7 @@ def build_activity_prompt(base_prompt, answers_text='', plan_text=''):
     if answers_text:
         sections.append(answers_text)
     if plan_text:
-        sections.append('Agreed plan:\n%s' % plan_text.strip())
+        sections.append('%s\n%s' % (AGREED_PLAN_HEADER, plan_text.strip()))
     sections.append(base_prompt.strip())
     combined = '\n\n'.join(section for section in sections if section)
     if len(combined) > MAX_PROMPT_LENGTH:

@@ -27,6 +27,13 @@ CODE_SIZES = ('compact', 'standard', 'full')
 
 MAX_PROMPT_LENGTH = 12000
 
+# Sentinel headers marking a prompt that already carries the learner's
+# confirmed clarifying answers or an agreed build plan.  Such a prompt is an
+# already-expanded brief and must not be re-paraphrased by auto-enhancement,
+# which could drop or soften the confirmed answers.
+CONFIRMED_REQUIREMENTS_HEADER = 'Confirmed requirements:'
+AGREED_PLAN_HEADER = 'Agreed plan:'
+
 TEMPLATES = (
     'auto',
     'canvas',
@@ -128,23 +135,26 @@ class ActivitySpec:
 
     def to_prompt(self):
         goal = self.learner_goal or 'Infer a learner goal from the idea.'
-        return (
-            'Activity name: %s\n'
-            'Learner idea: %s\n'
-            'Learning category: %s\n'
-            'Template preference: %s\n'
-            'Age band: %s\n'
-            'Learner goal: %s\n'
-            'License: %s'
-        ) % (
-            self.name,
-            self.prompt,
-            self.category,
-            self.template,
-            self.age_band,
-            goal,
-            self.license_id,
-        )
+        idea, requirements = _split_confirmed_requirements(self.prompt)
+        lines = [
+            'Activity name: %s' % self.name,
+            'Learner idea: %s' % idea,
+        ]
+        if requirements:
+            # The learner explicitly chose these answers in the guided flow;
+            # surface them as their own must-honor section so the planner and
+            # code generator treat them as constraints, not loose context.
+            lines.append(
+                'Confirmed requirements (the learner explicitly chose these '
+                '— honor every one):\n%s' % requirements)
+        lines.extend([
+            'Learning category: %s' % self.category,
+            'Template preference: %s' % self.template,
+            'Age band: %s' % self.age_band,
+            'Learner goal: %s' % goal,
+            'License: %s' % self.license_id,
+        ])
+        return '\n'.join(lines)
 
     @classmethod
     def from_dict(cls, data):
@@ -173,6 +183,30 @@ def name_from_prompt(prompt):
     useful = [word for word in words if word.lower() not in ignored]
     selected = useful[:4] or words[:4] or ['Learning', 'Activity']
     return ' '.join(word.capitalize() for word in selected)[:80]
+
+
+def _split_confirmed_requirements(prompt):
+    """Separate the confirmed-answers block from the base idea.
+
+    The guided flow prepends a ``Confirmed requirements:`` block (the
+    learner's explicit clarifying answers) ahead of the base idea,
+    separated by a blank line.  Pulling it out lets :meth:`ActivitySpec.
+    to_prompt` present those answers as hard constraints instead of
+    burying them inside the free-text idea.  Returns ``(idea,
+    requirements)`` where ``requirements`` is ``''`` when no block is
+    present, leaving plain prompts unchanged.
+    """
+    if not isinstance(prompt, str):
+        return prompt, ''
+    index = prompt.find(CONFIRMED_REQUIREMENTS_HEADER)
+    if index == -1:
+        return prompt, ''
+    after = prompt[index + len(CONFIRMED_REQUIREMENTS_HEADER):]
+    # The block runs until the first blank line (the section separator);
+    # everything before the header and after the block is the base idea.
+    body, _, rest = after.partition('\n\n')
+    idea = (prompt[:index] + rest).strip()
+    return idea, body.strip()
 
 
 def _normalize_spaces(value):

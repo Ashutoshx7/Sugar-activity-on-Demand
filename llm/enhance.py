@@ -15,6 +15,8 @@ enhancement problem must never break generation.
 import logging
 import re
 
+from core.spec import AGREED_PLAN_HEADER
+from core.spec import CONFIRMED_REQUIREMENTS_HEADER
 from core.spec import MAX_PROMPT_LENGTH
 
 _ENHANCE_TIMEOUT = 120
@@ -62,6 +64,11 @@ def needs_enhancement(prompt):
     """
     text = (prompt or '').strip()
     if not text:
+        return False
+    # A prompt that already carries confirmed clarifying answers or an
+    # agreed plan is an already-expanded brief; re-paraphrasing it risks
+    # dropping the learner's explicit answers, so leave it as-is.
+    if CONFIRMED_REQUIREMENTS_HEADER in text or AGREED_PLAN_HEADER in text:
         return False
     return len(text.split()) < _AUTO_MAX_WORDS and \
         len(text) < _AUTO_MAX_CHARS

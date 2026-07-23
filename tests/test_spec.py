@@ -69,6 +69,34 @@ class TestActivitySpec(unittest.TestCase):
         self.assertEqual(80, len(spec.name))
         self.assertEqual([], spec.validate())
 
+    def test_to_prompt_plain_prompt_has_no_requirements_section(self):
+        spec = ActivitySpec(
+            name='Fraction Quest',
+            prompt='Create a fractions activity.',
+            category='logic_math',
+            license_id='MIT',
+        )
+        text = spec.to_prompt()
+        self.assertIn('Learner idea: Create a fractions activity.', text)
+        self.assertNotIn('Confirmed requirements', text)
+
+    def test_to_prompt_splits_confirmed_requirements_into_constraints(self):
+        enriched = ('Confirmed requirements:\n- Who plays?: Human vs AI\n\n'
+                    'chess game')
+        spec = ActivitySpec(
+            name='Chess',
+            prompt=enriched,
+            category='games',
+            license_id='MIT',
+        )
+        text = spec.to_prompt()
+        # Base idea no longer carries the requirements block...
+        self.assertIn('Learner idea: chess game', text)
+        # ...which is now its own must-honor section with the answer.
+        self.assertIn('Confirmed requirements (the learner explicitly chose',
+                      text)
+        self.assertIn('- Who plays?: Human vs AI', text)
+
     def test_name_from_prompt_ignores_instruction_words(self):
         self.assertEqual(
             'Fractions Quiz Children',

@@ -41,6 +41,17 @@ class TestNeedsEnhancement(unittest.TestCase):
         self.assertFalse(needs_enhancement('word ' * 45))
         self.assertFalse(needs_enhancement('x' * 450))
 
+    def test_confirmed_requirements_prompt_skips(self):
+        # A short prompt carrying confirmed clarifying answers must not be
+        # re-paraphrased, or the learner's explicit answers can be dropped.
+        enriched = ('Confirmed requirements:\n- Who plays?: Human vs AI\n\n'
+                    'chess game')
+        self.assertFalse(needs_enhancement(enriched))
+
+    def test_agreed_plan_prompt_skips(self):
+        planned = 'Agreed plan:\nBuild a chess board\n\nchess game'
+        self.assertFalse(needs_enhancement(planned))
+
 
 class TestEnhancePrompt(unittest.TestCase):
 
